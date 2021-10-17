@@ -1,0 +1,41 @@
+DROP TABLE IF EXISTS table1;
+CREATE TABLE IF NOT EXISTS table1 AS
+	SELECT first_name ||' '|| last_name AS full_name,
+			LENGTH(first_name ||' '|| last_name) AS name_len,
+			store_id,
+			customer_id
+	FROM customer
+	WHERE first_name LIKE '%e%';
+
+DROP TABLE IF EXISTS table2;
+CREATE TABLE IF NOT EXISTS table2 AS
+	SELECT CAST(customer_id as INT) AS customer_id, amount
+	FROM payment
+	ORDER BY amount ASC;
+
+ALTER TABLE table2
+ADD payday DATE;
+
+-- WITH tt AS(
+-- 	SELECT payment.payment_date, payment.customer_id
+-- 	FROM payment)
+
+DROP TABLE IF EXISTS table3;
+CREATE TABLE table3 AS
+	(SELECT distinct table1.full_name, table1.name_len, table1.store_id, table1.customer_id,
+		table2.amount, 
+		CASE WHEN 
+			table2.payday IS NULL THEN 'None DATA'
+		END
+	FROM table1
+		INNER JOIN table2
+			ON table1.customer_id = table2.customer_id
+	ORDER BY full_name ASC
+	LIMIT 100);
+
+SELECT table3.full_name, table3.name_len, table3.store_id, table3.customer_id,
+		SUM(table3.amount) AS sum_amount, table3.case
+FROM table3
+GROUP BY table3.full_name,table3.name_len, table3.store_id, table3.customer_id,table3.case;
+
+	
